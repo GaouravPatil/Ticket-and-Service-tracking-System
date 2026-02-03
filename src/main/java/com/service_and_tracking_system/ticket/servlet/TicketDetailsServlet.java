@@ -1,16 +1,17 @@
 package com.service_and_tracking_system.ticket.servlet;
 
-import com.service_and_tracking_system.ticket.dao.TicketDAO;
-import com.service_and_tracking_system.ticket.util.DBConnectionUtil;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.ResultSet;
+
+import com.service_and_tracking_system.ticket.dao.TicketDAO;
+import com.service_and_tracking_system.ticket.util.DBConnectionUtil;
+
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @WebServlet("/ticket-details")
 public class TicketDetailsServlet extends HttpServlet {
@@ -28,7 +29,6 @@ public class TicketDetailsServlet extends HttpServlet {
 
             TicketDAO dao = new TicketDAO();
 
-            // 🔴 Fetch Ticket Core Info
             ResultSet tRs = dao.getTicketDetails(con, ticketId);
 
             if (!tRs.next()) {
@@ -45,7 +45,7 @@ public class TicketDetailsServlet extends HttpServlet {
             out.println("<p>Status: " + tRs.getString("status_name") + "</p>");
             out.println("<p>Created: " + tRs.getTimestamp("created_at") + "</p>");
 
-            // 🔴 Fetch History
+            
             ResultSet hRs = dao.getTicketHistory(con, ticketId);
 
             out.println("<h3>Status History</h3>");

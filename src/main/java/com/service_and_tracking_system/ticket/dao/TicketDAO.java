@@ -1,10 +1,17 @@
 package com.service_and_tracking_system.ticket.dao;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.logging.Logger;
+
 import com.service_and_tracking_system.ticket.util.DBConnectionUtil;
 
-import java.sql.*;
-
 public class TicketDAO {
+
+    private static final Logger logger = Logger.getLogger(TicketDAO.class.getName());
 
     public long createTicket(long userId,
                              long categoryId,
@@ -34,11 +41,16 @@ public class TicketDAO {
                 ps.setString(4, title);
                 ps.setString(5, description);
 
-                ps.executeUpdate();
+                int rowsAffected = ps.executeUpdate();
+                logger.info("Rows affected in ticket table: " + rowsAffected);
 
                 ResultSet rs = ps.getGeneratedKeys();
-                rs.next();
-                ticketId = rs.getLong(1);
+                if (rs.next()) {
+                    ticketId = rs.getLong(1);
+                    logger.info("Generated ticket ID: " + ticketId);
+                } else {
+                    throw new SQLException("Failed to retrieve ticket ID.");
+                }
             }
 
             long openStatusId;
@@ -48,8 +60,12 @@ public class TicketDAO {
                                  "SELECT status_id FROM ticket_status WHERE status_name='OPEN'");
                  ResultSet rs = ps.executeQuery()) {
 
-                rs.next();
-                openStatusId = rs.getLong(1);
+                if (rs.next()) {
+                    openStatusId = rs.getLong(1);
+                    logger.info("Open status ID: " + openStatusId);
+                } else {
+                    throw new SQLException("Open status ID not found in ticket_status table.");
+                }
             }
 
             try (PreparedStatement ps = con.prepareStatement(historySql)) {
@@ -58,11 +74,15 @@ public class TicketDAO {
                 ps.setLong(3, userId);
                 ps.setString(4, "Ticket created");
 
-                ps.executeUpdate();
+                int historyRowsAffected = ps.executeUpdate();
+                logger.info("Rows affected in ticket_status_history table: " + historyRowsAffected);
             }
 
             con.commit();
             return ticketId;
+        } catch (Exception e) {
+            logger.severe("Error creating ticket: " + e.getMessage());
+            throw e;
         }
     }
     public ResultSet getTicketDetails(Connection con, long ticketId) throws Exception {
