@@ -15,7 +15,6 @@ import jakarta.servlet.http.HttpSession;
 @WebServlet("/create-ticket")
 public class CreateTicket extends HttpServlet {
 
-    
     private static final Logger logger = Logger.getLogger(CreateTicket.class.getName());
 
     @Override
@@ -23,6 +22,11 @@ public class CreateTicket extends HttpServlet {
             throws IOException {
 
         HttpSession session = request.getSession(false);
+
+        logger.info("Session is null: " + (session == null));
+        if (session != null) {
+            logger.info("User ID in session: " + session.getAttribute("userId"));
+        }
 
         if (session == null) {
             response.sendRedirect("login.html");
@@ -39,18 +43,27 @@ public class CreateTicket extends HttpServlet {
         try {
 
             TicketDAO dao = new TicketDAO();
-            long ticketId =
-                    dao.createTicket(userId, categoryId, priorityId, title, description);
+            long ticketId = dao.createTicket(userId, categoryId, priorityId, title, description);
 
-            response.getWriter().println("Ticket created ID: " + ticketId);
+            response.setContentType("text/html");
+            response.getWriter().println("<html><head><title>Success</title></head><body>");
+            response.getWriter().println("<h3>Ticket created successfully!</h3>");
+            response.getWriter().println("<p>Ticket ID: " + ticketId + "</p>");
+            response.getWriter().println("<br><a href='agent-dashboard.html'>Go to Dashboard</a>");
+            response.getWriter().println("</body></html>");
 
         } catch (Exception e) {
-            
-            logger.log(Level.SEVERE, "An error occurred", e);
+
+            logger.log(Level.SEVERE, "Error creating ticket", e);
             response.setContentType("text/html");
             response.getWriter().println("<html><body>");
-            response.getWriter().println("<h3>Ticket creation failed. Please try again later.</h3>");
-            response.getWriter().println("<p>Error: " + e.getMessage() + "</p>");
+            response.getWriter().println("<h3 style='color:red;'>Ticket creation failed.</h3>");
+            response.getWriter().println("<p>Error details: " + e.getMessage() + "</p>");
+            response.getWriter().println("<p>Please contact support if this persists.</p>");
+            // Print stack trace for debugging (remove in production)
+            response.getWriter().println("<pre>");
+            e.printStackTrace(response.getWriter());
+            response.getWriter().println("</pre>");
             response.getWriter().println("</body></html>");
         }
     }
