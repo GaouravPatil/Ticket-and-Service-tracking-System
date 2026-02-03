@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Dashboard - Support Tracking</title>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Syne:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF6B35;
+            --secondary: #004E89;
+            --accent: #F7B801;
+            --dark: #1A1A2E;
+            --light: #EAEAEA;
+            --success: #2EC4B6;
+            --danger: #E63946;
+            --bg-texture: #0F0F1E;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Syne', sans-serif;
+            background: var(--bg-texture);
+            color: var(--light);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                repeating-linear-gradient(0deg, rgba(255, 107, 53, 0.03) 0px, transparent 1px, transparent 2px, rgba(255, 107, 53, 0.03) 3px),
+                repeating-linear-gradient(90deg, rgba(0, 78, 137, 0.03) 0px, transparent 1px, transparent 2px, rgba(0, 78, 137, 0.03) 3px);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .grain {
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+            pointer-events: none;
+            opacity: 0.4;
+            z-index: 2;
+            animation: grain 8s steps(10) infinite;
+        }
+
+        @keyframes grain {
+            0%, 100% { transform: translate(0, 0); }
+            10% { transform: translate(-5%, -10%); }
+            30% { transform: translate(3%, -15%); }
+            50% { transform: translate(12%, 9%); }
+            70% { transform: translate(9%, 4%); }
+            90% { transform: translate(-1%, 7%); }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 60px 40px;
+            position: relative;
+            z-index: 3;
+        }
+
+        .header {
+            margin-bottom: 60px;
+            position: relative;
+            animation: slideDown 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo {
+            display: inline-block;
+            font-family: 'Archivo Black', sans-serif;
+            font-size: 2.5rem;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: -2px;
+            margin-bottom: 10px;
+            position: relative;
+            animation: glitchText 5s infinite;
+        }
+
+        @keyframes glitchText {
+            0%, 90%, 100% { text-shadow: none; }
+            91% { text-shadow: 2px 0 var(--accent), -2px 0 var(--secondary); }
+            93% { text-shadow: -2px 0 var(--accent), 2px 0 var(--secondary); }
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--light);
+            opacity: 0.7;
+            font-weight: 400;
+        }
+
+        .action-link {
+            display: inline-block;
+            margin-bottom: 40px;
+            padding: 12px 30px;
+            background: rgba(0, 78, 137, 0.3);
+            border: 2px solid var(--secondary);
+            color: var(--light);
+            text-decoration: none;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            animation: fadeIn 1s cubic-bezier(0.16, 1, 0.3, 1) 0.3s backwards;
+        }
+
+        .action-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 78, 137, 0.5), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .action-link:hover {
+            border-color: var(--accent);
+            background: rgba(0, 78, 137, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 78, 137, 0.3);
+        }
+
+        .action-link:hover::before {
+            left: 100%;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            animation: fadeIn 1s cubic-bezier(0.16, 1, 0.3, 1) 0.5s backwards;
+        }
+
+        .form-section {
+            background: rgba(26, 26, 46, 0.6);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 107, 53, 0.2);
+            padding: 50px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .form-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--accent), var(--secondary));
+        }
+
+        .form-section::after {
+            content: '';
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 150px;
+            height: 150px;
+            background: radial-gradient(circle, rgba(255, 107, 53, 0.1), transparent);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .section-title {
+            font-family: 'Archivo Black', sans-serif;
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: -1px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 6px;
+            height: 40px;
+            background: var(--accent);
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+        }
+
+        .form-group:nth-child(2) { animation-delay: 0.1s; }
+        .form-group:nth-child(3) { animation-delay: 0.2s; }
+        .form-group:nth-child(4) { animation-delay: 0.3s; }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        label {
+            display: block;
+            margin-bottom: 12px;
+            color: var(--light);
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0.9;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 16px 20px;
+            background: rgba(15, 15, 30, 0.6);
+            border: 2px solid rgba(255, 107, 53, 0.3);
+            color: var(--light);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="password"]:focus {
+            border-color: var(--primary);
+            background: rgba(15, 15, 30, 0.8);
+            box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.1);
+        }
+
+        input::placeholder {
+            color: rgba(234, 234, 234, 0.3);
+            font-style: italic;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 18px;
+            background: var(--primary);
+            border: none;
+            color: white;
+            font-family: 'Syne', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+        }
+
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s ease, height 0.6s ease;
+        }
+
+        .submit-btn:hover {
+            background: var(--accent);
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(255, 107, 53, 0.4);
+        }
+
+        .submit-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .submit-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .submit-btn span {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 40px 20px;
+            }
+
+            .form-section {
+                padding: 30px 25px;
+            }
+
+            .logo {
+                font-size: 2rem;
+            }
+
+            .section-title {
+                font-size: 1.4rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="grain"></div>
+
+<div class="container">
+    <div class="header">
+        <div class="logo">Agent Dashboard</div>
+        <div class="subtitle">Manage users and view support tickets</div>
+    </div>
+
+    <a href="fetch-all-tickets" class="action-link">→ View All Tickets</a>
+
+    <div class="dashboard-grid">
+        <!-- Create New User Form -->
+        <div class="form-section">
+            <h3 class="section-title">Create New User</h3>
+            <form action="create-user" method="post" id="createUserForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" placeholder="Enter username" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" placeholder="user@example.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Enter secure password" required>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    <span>Create User</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- Additional Section (Optional - can be customized) -->
+        <div class="form-section">
+            <h3 class="section-title">Quick Stats</h3>
+            <div style="padding: 20px 0;">
+                <div style="margin-bottom: 30px;">
+                    <div style="font-size: 0.9rem; opacity: 0.7; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">Active Users</div>
+                    <div style="font-size: 3rem; font-family: 'Archivo Black', sans-serif; color: var(--accent);">247</div>
+                </div>
+                <div style="margin-bottom: 30px;">
+                    <div style="font-size: 0.9rem; opacity: 0.7; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">Open Tickets</div>
+                    <div style="font-size: 3rem; font-family: 'Archivo Black', sans-serif; color: var(--primary);">42</div>
+                </div>
+                <div>
+                    <div style="font-size: 0.9rem; opacity: 0.7; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">Resolved Today</div>
+                    <div style="font-size: 3rem; font-family: 'Archivo Black', sans-serif; color: var(--success);">18</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Form submission handling
+    const createUserForm = document.getElementById('createUserForm');
+
+    createUserForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const formData = {
+            username: document.getElementById('username').value,
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value,
+            timestamp: new Date().toISOString()
+        };
+
+        // Simulate submission
+        const submitBtn = document.querySelector('.submit-btn');
+        submitBtn.style.background = 'var(--success)';
+        submitBtn.innerHTML = '<span>✓ User Created Successfully!</span>';
+
+        setTimeout(() => {
+            alert(`User Created!\n\nUsername: ${formData.username}\nEmail: ${formData.email}\n\nThe user account has been created successfully.`);
+
+            // Reset form
+            createUserForm.reset();
+            submitBtn.style.background = 'var(--primary)';
+            submitBtn.innerHTML = '<span>Create User</span>';
+        }, 1500);
+    });
+
+    // Add subtle parallax effect on mouse move
+    document.addEventListener('mousemove', (e) => {
+        const mouseX = e.clientX / window.innerWidth;
+        const mouseY = e.clientY / window.innerHeight;
+
+        document.querySelector('.grain').style.transform = `translate(${mouseX * 20}px, ${mouseY * 20}px)`;
+    });
+</script>
+</body>
+</html>
