@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.service_and_tracking_system.ticket.dao.TicketDAO;
 import com.service_and_tracking_system.ticket.util.DBConnectionUtil;
@@ -16,6 +18,9 @@ import jakarta.servlet.http.HttpServletResponse;
 @WebServlet("/ticket-details")
 public class TicketDetailsServlet extends HttpServlet {
 
+    private static final Logger logger = Logger.getLogger(TicketDetailsServlet.class.getName());
+
+    @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
@@ -45,7 +50,6 @@ public class TicketDetailsServlet extends HttpServlet {
             out.println("<p>Status: " + tRs.getString("status_name") + "</p>");
             out.println("<p>Created: " + tRs.getTimestamp("created_at") + "</p>");
 
-            
             ResultSet hRs = dao.getTicketHistory(con, ticketId);
 
             out.println("<h3>Status History</h3>");
@@ -64,7 +68,7 @@ public class TicketDetailsServlet extends HttpServlet {
             out.println("</table>");
 
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.log(Level.SEVERE, "Error loading ticket details", e);
             out.println("<h3>Error loading ticket details</h3>");
         }
     }

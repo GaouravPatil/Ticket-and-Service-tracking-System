@@ -23,9 +23,9 @@ public class CreateTicket extends HttpServlet {
 
         HttpSession session = request.getSession(false);
 
-        logger.info("Session is null: " + (session == null));
+        logger.log(Level.INFO, "Session is null: {0}", session == null);
         if (session != null) {
-            logger.info("User ID in session: " + session.getAttribute("userId"));
+            logger.log(Level.INFO, "User ID in session: {0}", session.getAttribute("userId"));
         }
 
         if (session == null) {
@@ -58,12 +58,7 @@ public class CreateTicket extends HttpServlet {
             response.setContentType("text/html");
             response.getWriter().println("<html><body>");
             response.getWriter().println("<h3 style='color:red;'>Ticket creation failed.</h3>");
-            response.getWriter().println("<p>Error details: " + e.getMessage() + "</p>");
             response.getWriter().println("<p>Please contact support if this persists.</p>");
-            // Print stack trace for debugging (remove in production)
-            response.getWriter().println("<pre>");
-            e.printStackTrace(response.getWriter());
-            response.getWriter().println("</pre>");
             response.getWriter().println("</body></html>");
         }
     }

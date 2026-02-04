@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.service_and_tracking_system.ticket.util.DBConnectionUtil;
@@ -41,12 +42,12 @@ public class TicketDAO {
                 ps.setString(5, description);
 
                 int rowsAffected = ps.executeUpdate();
-                logger.info("Rows affected in ticket table: " + rowsAffected);
+                logger.log(Level.INFO, "Rows affected in ticket table: {0}", rowsAffected);
 
                 ResultSet rs = ps.getGeneratedKeys();
                 if (rs.next()) {
                     ticketId = rs.getLong(1);
-                    logger.info("Generated ticket ID: " + ticketId);
+                    logger.log(Level.INFO, "Generated ticket ID: {0}", ticketId);
                 } else {
                     throw new SQLException("Failed to retrieve ticket ID.");
                 }
@@ -60,7 +61,7 @@ public class TicketDAO {
                 try (ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) {
                         openStatusId = rs.getLong(1);
-                        logger.info("Found existing Open status ID: " + openStatusId);
+                        logger.log(Level.INFO, "Found existing Open status ID: {0}", openStatusId);
                     }
                 }
             }
@@ -74,7 +75,7 @@ public class TicketDAO {
                     ResultSet rs = ps.getGeneratedKeys();
                     if (rs.next()) {
                         openStatusId = rs.getLong(1);
-                        logger.info("Created new Open status ID: " + openStatusId);
+                        logger.log(Level.INFO, "Created new Open status ID: {0}", openStatusId);
                     } else {
                         // Some databases might not return keys for simple inserts or if not requested
                         // properly,
@@ -92,29 +93,29 @@ public class TicketDAO {
                 ps.setString(4, "Ticket created");
 
                 int historyRowsAffected = ps.executeUpdate();
-                logger.info("Rows affected in ticket_status_history table: " + historyRowsAffected);
+                logger.log(Level.INFO, "Rows affected in ticket_status_history table: {0}", historyRowsAffected);
             }
 
             con.commit();
             return ticketId;
 
-        } catch (Exception e) {
+        } catch (SQLException | NullPointerException e) {
             if (con != null) {
                 try {
-                    logger.severe("Rolling back transaction due to error: " + e.getMessage());
+                    logger.log(Level.SEVERE, "Rolling back transaction due to error: {0}", e.getMessage());
                     con.rollback();
                 } catch (SQLException ex) {
-                    logger.severe("Error during rollback: " + ex.getMessage());
+                    logger.log(Level.SEVERE, "Error during rollback: {0}", ex.getMessage());
                 }
             }
-            logger.severe("Error creating ticket: " + e.getMessage());
+            logger.log(Level.SEVERE, "Error creating ticket: {0}", e.getMessage());
             throw e;
         } finally {
             if (con != null) {
                 try {
                     con.close();
                 } catch (SQLException e) {
-                    logger.warning("Error closing connection: " + e.getMessage());
+                    logger.log(Level.WARNING, "Error closing connection: {0}", e.getMessage());
                 }
             }
         }
@@ -123,11 +124,12 @@ public class TicketDAO {
     public ResultSet getTicketDetails(Connection con, long ticketId) throws Exception {
 
         String sql = """
-                    SELECT ts.status_name, h.updated_by, h.remarks, h.updated_at
-                    FROM ticket_status_history h
-                    JOIN ticket_status ts ON h.status_id = ts.status_id
-                    WHERE h.ticket_id = ?
-                    ORDER BY h.updated_at ASC
+                    SELECT t.ticket_id, t.title, t.description, c.category_name, p.priority_name, s.status_name, t.created_at
+                    FROM ticket t
+                    JOIN category c ON t.category_id = c.category_id
+                    JOIN priority p ON t.priority_id = p.priority_id
+                    JOIN ticket_status s ON t.current_status = s.status_id
+                    WHERE t.ticket_id = ?
                 """;
 
         PreparedStatement ps = con.prepareStatement(sql);
